@@ -35,3 +35,4 @@ build/
 .mvn
 drive/
 postgres-data/
+.DS_Store/

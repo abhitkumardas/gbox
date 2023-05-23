@@ -2,7 +2,6 @@ package com.ru.gbox.controller;
 
 import com.ru.gbox.service.DriveService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,9 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
@@ -42,11 +38,6 @@ public class DriveController {
     @PostMapping("/upload-files")
     public ResponseEntity uploadFiles(@RequestParam String reqDir, @RequestParam List<MultipartFile> files, Authentication authentication) {
         return ResponseEntity.ok(driveService.uploadMultipleFiles(reqDir, files, authentication.getName()));
-    }
-
-    @GetMapping("/resource")
-    public ResponseEntity getFileResource(@RequestParam String reqDir, @RequestParam String fileName, Authentication authentication) {
-        return ResponseEntity.ok(driveService.getFileAsResurce(reqDir, fileName, authentication.getName()));
     }
 
     @GetMapping(value = "/resource-file", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
