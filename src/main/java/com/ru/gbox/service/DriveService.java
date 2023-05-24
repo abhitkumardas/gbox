@@ -1,6 +1,7 @@
 package com.ru.gbox.service;
 
 import com.ru.gbox.models.Content;
+import com.ru.gbox.models.UploadRes;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,13 +87,18 @@ public class DriveService {
         return type;
     }
 
-    public String createFolder(String reqDir, String folderName, String email) {
+    public UploadRes createFolder(String reqDir, String folderName, String email) {
         String currentDir = getCurrentDir(reqDir, email);
         File newFolder = new File(currentDir + "/" + folderName);
+        UploadRes uploadRes = new UploadRes();
+        uploadRes.setFileName(folderName);
         if (newFolder.exists()) {
-            return "Folder Already Created";
+            uploadRes.setStatus(0);
+        } else {
+            newFolder.mkdir();
+            uploadRes.setStatus(1);
         }
-        return newFolder.mkdir() ? "Folder Created Successfully" : "Folder Creation Unsuccessfull, Please retry again...";
+        return uploadRes;
     }
 
     public String getCurrentDir(String reqDir, String email) {
@@ -109,39 +115,52 @@ public class DriveService {
         return currentDirPath;
     }
 
-    @SneakyThrows
-    public String uploadFile(String reqDir, MultipartFile multipartFile, String email) {
+    public UploadRes uploadFile(String reqDir, MultipartFile multipartFile, String email) {
         String currentDir = getCurrentDir(reqDir, email);
         String filePath = currentDir + "/"  + multipartFile.getOriginalFilename();
         File file = new File(filePath);
         if (file.exists()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File Already exists");
         }
-        multipartFile.transferTo(Path.of(filePath));
 
-        return file.exists() ? "Uploaded Successfully" : "Upload Failed Please try again later";
+        UploadRes ur = new UploadRes();
+        ur.setFileName(multipartFile.getOriginalFilename());
+        try {
+            multipartFile.transferTo(Path.of(filePath));
+            ur.setStatus(1);
+        } catch (IOException e) {
+            ur.setStatus(1);
+            e.printStackTrace();
+        }
+        return ur;
     }
 
     @SneakyThrows
-    public String uploadMultipleFiles(String reqDir, List<MultipartFile> multipartFiles, String email) {
+    public List<UploadRes> uploadMultipleFiles(String reqDir, List<MultipartFile> multipartFiles, String email) {
         String currentDir = getCurrentDir(reqDir, email);
-        Map<String, Integer> uploadRes = new HashMap();
+        List<UploadRes> uploadResList = new ArrayList<>();
 
         multipartFiles.forEach( mf -> {
             String filePath = currentDir + "/"  + mf.getOriginalFilename();
             File file = new File(filePath);
+            UploadRes ur = new UploadRes();
+            ur.setFileName(mf.getOriginalFilename());
+
             if (file.exists()) {
-                uploadRes.put(mf.getOriginalFilename(), 0);
+                ur.setStatus(0);
+            } else {
+                try {
+                    mf.transferTo(Path.of(filePath));
+                    ur.setStatus(1);
+                } catch (IOException e) {
+                    ur.setStatus(-1);
+                }
             }
-            try {
-                mf.transferTo(Path.of(filePath));
-                uploadRes.put(mf.getOriginalFilename(), 1);
-            } catch (IOException e) {
-                uploadRes.put(mf.getOriginalFilename(), -1);
-            }
+
+            uploadResList.add(ur);
         });
 
-        return uploadRes.toString();
+        return uploadResList;
     }
 
     @SneakyThrows

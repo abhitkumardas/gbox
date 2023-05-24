@@ -40,8 +40,9 @@ public class DriveController {
         return ResponseEntity.ok(driveService.uploadMultipleFiles(reqDir, files, authentication.getName()));
     }
 
+//    @CrossOrigin(origins = "http://localhost:4200", maxAge = 3600)
     @GetMapping(value = "/resource-file", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public @ResponseBody Resource getFileViaByteArrayResource(@RequestParam String reqDir, @RequestParam String fileName,
+    public Resource getFileViaByteArrayResource(@RequestParam String reqDir, @RequestParam String fileName,
                                                               Authentication authentication) throws IOException, URISyntaxException {
         return driveService.getFileAsResurce(reqDir, fileName, authentication.getName());
     }
